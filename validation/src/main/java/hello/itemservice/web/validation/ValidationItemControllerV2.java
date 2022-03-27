@@ -115,7 +115,7 @@ public class ValidationItemControllerV2 {
     }
 
 
-    @PostMapping("/add")
+   // @PostMapping("/add")
     public String addItemV3(@ModelAttribute Item item, BindingResult bindingResult, RedirectAttributes redirectAttributes, Model model) {
 
         if(!StringUtils.hasText(item.getItemName())){
@@ -150,6 +150,46 @@ public class ValidationItemControllerV2 {
     }
 
 
+    @PostMapping("/add")
+    public String addItemV4(@ModelAttribute Item item, BindingResult bindingResult, RedirectAttributes redirectAttributes, Model model) {
+
+        log.info("object Name = {}", bindingResult.getObjectName());
+        log.info("target={}", bindingResult.getTarget());
+
+        if(!StringUtils.hasText(item.getItemName())){
+            //bindingResult.addError(new FieldError("item","itemName", item.getItemName(), false, new String[]{"required.item.itemName", "required.default"}, null, "상품 이름 디폴트 에러메시지."));
+            bindingResult.rejectValue("itemName", "required", "상품 이름 디폴트 에러메시지." );
+        }
+        if(item.getPrice() == null || item.getPrice() < 1000 || item.getPrice() > 1000000){
+            //bindingResult.addError(new FieldError("item","price", item.getPrice(), false, new String[]{"range.item.price"}, new Object[]{1000, 1000000},  "가격은 디폴트 에러메시지."));
+            bindingResult.rejectValue("price", "range", new Object[]{1000, 1000000}, "가격은 디폴트 에러메시지.");
+        }
+        if(item.getQuantity() == null || item.getQuantity() >= 9999 ){
+            //bindingResult.addError(new FieldError("item","quantity", item.getQuantity(), false, new String[]{"max.item.quantity"}, new Object[]{9999},  "수량 디폴트 에러메시지."));
+            bindingResult.rejectValue("quantity", "max", new Object[]{9999},  "수량 디폴트 에러메시지.");
+        }
+
+        //특정 필드가 아닌 복합 룰 검증
+        if(item.getPrice() != null && item.getQuantity() != null ){
+            int resultPrice = item.getPrice() * item.getQuantity();
+            if(resultPrice < 10000){
+                bindingResult.addError(new ObjectError("item", new String[]{"totalPriceMin"}, new Object[]{10000, resultPrice}, "토탈금액 디폴트 에러메시지" ));
+                bindingResult.reject("totalPriceMin", new Object[]{10000, resultPrice}, "토탈금액 디폴트 에러메시지");
+            }
+        }
+
+        //검증에 실패하면 다시 입력 폼으로
+        if(bindingResult.hasErrors()){
+            log.info("errors = {}", bindingResult);
+            return "validation/v2/addForm";
+        }
+
+        //성공 로직
+        Item savedItem = itemRepository.save(item);
+        redirectAttributes.addAttribute("itemId", savedItem.getId());
+        redirectAttributes.addAttribute("status", true);
+        return "redirect:/validation/v2/items/{itemId}";
+    }
 
 
     @GetMapping("/{itemId}/edit")
