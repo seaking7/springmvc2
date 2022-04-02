@@ -1,5 +1,6 @@
 package hello.login.web.session;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.Cookie;
@@ -13,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * 세션 관리
  */
+@Slf4j
 @Component
 public class SessionManager {
 
@@ -20,7 +22,7 @@ public class SessionManager {
     private Map<String, Object> sessionStore = new ConcurrentHashMap<>();
 
     /**
-     * 세션 새성
+     * 세션 생성
      * sessionId 생성( 임의의 추정 불가능한 랜덤 값)
      * 세션 저장소에 sessionId와 보관할 값 저장
      * sessionId로 응답쿠기를 생성해서 클라이언트에 전달
@@ -29,7 +31,9 @@ public class SessionManager {
 
         //세션 id를 생성하고, 값을 세션에 저장
         String sessionId = UUID.randomUUID().toString();
+        log.info("sessionId={}", sessionId);
         sessionStore.put(sessionId, value);
+
 
         //쿠키 생성
         Cookie mySessionCookie = new Cookie(SESSION_COOKIE_NAME, sessionId);
