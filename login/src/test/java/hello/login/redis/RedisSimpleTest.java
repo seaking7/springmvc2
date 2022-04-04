@@ -1,16 +1,17 @@
 package hello.login.redis;
 
+import hello.login.WebConfig;
 import lombok.RequiredArgsConstructor;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import org.springframework.data.redis.core.HashOperations;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.SetOperations;
-import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.core.*;
+import org.springframework.test.context.ContextConfiguration;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -19,7 +20,6 @@ import static org.assertj.core.api.Assertions.*;
 @SpringBootTest
 @RequiredArgsConstructor
 public class RedisSimpleTest {
-
 
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
@@ -40,6 +40,26 @@ public class RedisSimpleTest {
     }
 
     @Test
+    void testList(){
+        ListOperations<String, String> listOperations = redisTemplate.opsForList();
+        String key = "listKey";
+        listOperations.rightPush(key, "H");
+        listOperations.rightPush(key, "e");
+        listOperations.rightPush(key, "l");
+        listOperations.rightPush(key, "l");
+        listOperations.rightPush(key, "o");
+        listOperations.rightPushAll(key, " ", "t", "e", "s", "t");
+
+        assertThat(listOperations.index(key, 0)).isEqualTo("H");
+        assertThat(listOperations.index(key, 1)).isEqualTo("e");
+        assertThat(listOperations.size(key)).isEqualTo(10);
+
+        List<String> resultRange = listOperations.range(key, 0, 9);
+        System.out.println(Arrays.toString(resultRange.toArray()));
+    }
+
+
+    @Test
     void testSet(){
         //given
         SetOperations<String, String> setOperations = redisTemplate.opsForSet();
@@ -54,6 +74,26 @@ public class RedisSimpleTest {
 
         assertThat(members).containsOnly("h", "e", "l", "o");
         assertThat(size).isEqualTo(4);
+    }
+
+    @Test
+    void testSortedSet(){
+        ZSetOperations<String, String> zSetOperations = redisTemplate.opsForZSet();
+        String key = "sortedSetKey";
+
+        zSetOperations.add(key, "H", 1);
+        zSetOperations.add(key, "e", 5);
+        zSetOperations.add(key, "L", 10);
+        zSetOperations.add(key, "L", 15);
+        zSetOperations.add(key, "o", 20);
+
+        assertThat(zSetOperations.range(key, 0, 5)).containsOnly("H", "e", "L", "o");
+
+        assertThat(zSetOperations.size(key)).isEqualTo(4);
+
+        assertThat(zSetOperations.rangeByScore(key, 11, 23)).containsOnly("L", "o");
+        assertThat(zSetOperations.rangeByScore(key, 1, 9)).containsOnly("H", "e");
+        assertThat(zSetOperations.rangeByScore(key, 2, 9)).containsOnly("e");
     }
 
     @Test
