@@ -1,6 +1,9 @@
 package hello.login.domain.member;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Repository;
 
 import java.util.*;
@@ -9,6 +12,9 @@ import java.util.*;
 @Repository
 public class MemberRepository {
 
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
+
     private static Map<Long, Member> store = new HashMap<>();
 
     private static long sequence = 0L;
@@ -16,7 +22,13 @@ public class MemberRepository {
     public Member save(Member member){
         member.setId(++sequence);
         log.info("save: member={}", member);
+
+        ValueOperations<String, String> memberOperations = redisTemplate.opsForValue();
+        memberOperations.set("memberKey", member.getName());
+
         store.put(member.getId(), member);
+
+        //log.info("redis memberKey {}", memberOperations.get("memberKey"));
         return member;
     }
 
