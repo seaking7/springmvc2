@@ -76,8 +76,8 @@ public class WebConfig implements WebMvcConfigurer {
     }
 
     @Bean
-    public RedisTemplate<String, Object> redisTemplate(){
-        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+    public RedisTemplate<?, ?> redisTemplate(){
+        RedisTemplate<byte[], byte[]> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(redisConnectionFactory());
 //        redisTemplate.setKeySerializer(new StringRedisSerializer());
 //        redisTemplate.setValueSerializer(new StringRedisSerializer());
